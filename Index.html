@@ -1,57 +1,18 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Azhar Service - Chimney Service Tracker</title>
-    <!-- Correct Tailwind CSS CDN -->
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-/* Styles for the starter page. They only apply to its own classes. */
-.hello-page {
-  margin: 0;
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  background: #f5f2ed;
-  color: #1b1817;
-}
-
-.hello-card {
-  max-width: 28rem;
-  margin: 1.5rem;
-  padding: 2rem;
-  border-radius: 16px;
-  background: #fff;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
-}
-
-.hello-card h1 {
-  margin-top: 0;
-  color: #c2560c;
-}
-
-.hello-card button {
-  padding: 0.6rem 1.2rem;
-  border: 0;
-  border-radius: 8px;
-  background: #fe9615;
-  color: #1b1817;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-</style>
 </head>
 <body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col font-sans">
 
     <!-- Header -->
-    <header class="bg-blue-600 text-white shadow-md">
+    <header class="bg-blue-600 text-white shadow-md sticky top-0 z-40">
         <div class="max-w-4xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
             <div class="text-center sm:text-left">
                 <h1 class="text-lg sm:text-xl font-bold flex items-center justify-center sm:justify-start gap-2">
@@ -112,7 +73,7 @@
 
     <!-- New Service Modal -->
     <div id="serviceModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl relative">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl relative max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-user-plus text-blue-600"></i> Add New Service</h3>
                 <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-lg"></i></button>
@@ -134,15 +95,21 @@
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Chimney Model</label>
                     <input type="text" id="chimneyModel" required class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g. Faber Auto-Clean 60cm">
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Service Interval (Months)</label>
-                    <select id="serviceInterval" class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        <option value="0.0027">10 Seconds (Test Mode)</option>
-                        <option value="3" selected>3 Months (Standard)</option>
-                        <option value="4">4 Months</option>
-                        <option value="6">6 Months</option>
-                        <option value="12">1 Year</option>
-                    </select>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Service Date</label>
+                        <input type="date" id="serviceDate" required class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Next Service In</label>
+                        <select id="serviceInterval" class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                            <option value="0.0027">10s (Test)</option>
+                            <option value="3" selected>3 Months</option>
+                            <option value="4">4 Months</option>
+                            <option value="6">6 Months</option>
+                            <option value="12">1 Year</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="pt-2 flex gap-2">
                     <button type="button" onclick="closeModal()" class="w-1/2 py-2 text-sm border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-100 font-semibold">Cancel</button>
@@ -180,9 +147,26 @@
 
     <!-- Script -->
     <script>
+        function getTodayString() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        function formatDisplayDate(dateStr) {
+            if (!dateStr) return getTodayString();
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return dateStr;
+        }
+
         let services = JSON.parse(localStorage.getItem('azhar_chimney_services')) || [
-            { id: 1, name: "Rahul Sen", phone: "9830112233", address: "Garia, Kolkata", model: "Faber 60cm", targetTime: new Date().getTime() + 15000, status: "Active" },
-            { id: 2, name: "Anirban Roy", phone: "9874556677", address: "Rajpur, Sonarpur", model: "Elica Filterless", targetTime: new Date().getTime() + 86400000 * 90, status: "Active" }
+            { id: 1, name: "Rahul Sen", phone: "9830112233", address: "Garia, Kolkata", model: "Faber 60cm", serviceDate: getTodayString(), targetTime: new Date().getTime() + 15000, status: "Active" },
+            { id: 2, name: "Anirban Roy", phone: "9874556677", address: "Rajpur, Sonarpur", model: "Elica Filterless", serviceDate: getTodayString(), targetTime: new Date().getTime() + 86400000 * 90, status: "Active" }
         ];
 
         function saveToStorage() {
@@ -190,8 +174,16 @@
             renderServices();
         }
 
-        function openModal() { document.getElementById('serviceModal').classList.remove('hidden'); }
-        function closeModal() { document.getElementById('serviceModal').classList.add('hidden'); document.getElementById('serviceForm').reset(); }
+        function openModal() { 
+            document.getElementById('serviceDate').value = getTodayString();
+            document.getElementById('serviceModal').classList.remove('hidden'); 
+        }
+
+        function closeModal() { 
+            document.getElementById('serviceModal').classList.add('hidden'); 
+            document.getElementById('serviceForm').reset(); 
+        }
+
         function openBackupModal() { document.getElementById('backupModal').classList.remove('hidden'); }
         function closeBackupModal() { document.getElementById('backupModal').classList.add('hidden'); }
 
@@ -202,6 +194,7 @@
                 phone: "9800000000",
                 address: "Kamdahari, Garia",
                 model: "Sunflame Chimney",
+                serviceDate: getTodayString(),
                 targetTime: new Date().getTime() + 10000,
                 status: "Active"
             };
@@ -215,11 +208,20 @@
             const phone = document.getElementById('custPhone').value;
             const address = document.getElementById('custAddress').value;
             const model = document.getElementById('chimneyModel').value;
+            const serviceDate = document.getElementById('serviceDate').value;
             const months = parseFloat(document.getElementById('serviceInterval').value);
 
-            let targetTime = (months < 1) ? (new Date().getTime() + 10000) : (new Date().getTime() + (months * 30 * 24 * 60 * 60 * 1000));
+            let targetTime;
+            if (months < 1) {
+                targetTime = new Date().getTime() + 10000;
+            } else {
+                const selectedDateObj = new Date(serviceDate);
+                const now = new Date();
+                selectedDateObj.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
+                targetTime = selectedDateObj.getTime() + (months * 30 * 24 * 60 * 60 * 1000);
+            }
 
-            services.unshift({ id: Date.now(), name, phone, address, model, targetTime, status: 'Active' });
+            services.unshift({ id: Date.now(), name, phone, address, model, serviceDate, targetTime, status: 'Active' });
             saveToStorage();
             closeModal();
         }
@@ -227,6 +229,7 @@
         function renewService(id) {
             const item = services.find(s => s.id === id);
             if(item) {
+                item.serviceDate = getTodayString();
                 item.targetTime = new Date().getTime() + (90 * 24 * 60 * 60 * 1000);
                 item.status = 'Active';
                 saveToStorage();
@@ -251,7 +254,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(services, null, 2));
             const dl = document.createElement('a');
             dl.setAttribute("href", dataStr);
-            dl.setAttribute("download", "azhar_service_backup_" + new Date().toISOString().slice(0,10) + ".json");
+            dl.setAttribute("download", "azhar_service_backup_" + getTodayString() + ".json");
             document.body.appendChild(dl);
             dl.click();
             dl.remove();
@@ -277,6 +280,7 @@
 
         function renderServices() {
             const list = document.getElementById('serviceList');
+            if (!list) return;
             list.innerHTML = '';
             let total = services.length, due = 0, active = 0;
 
@@ -304,7 +308,9 @@
                         <span class="bg-gray-100 px-1.5 py-0.5 rounded text-blue-600">${Math.floor((diff % 60000) / 1000)}s</span>
                     </div>`;
 
-                const wa = `https://wa.me/91${item.phone}?text=` + encodeURIComponent(`Hello ${item.name}, your Kitchen Chimney (${item.model}) service is due from Azhar Service. Please let us know when to schedule.`);
+                // WhatsApp Message: English on Top, Bengali at Bottom
+                const waText = `Hello ${item.name},\nYour Kitchen Chimney (${item.model}) service (Last done on: ${formatDisplayDate(item.serviceDate)}) is due from Azhar Service - Home Appliances Repair. Please let us know when to schedule your service visit. Thank you!\n\n------------------------\n\nনমস্কার ${item.name},\nআপনার কিচেন চিমনি (${item.model})-এর সার্ভিস (শেষ সার্ভিস: ${formatDisplayDate(item.serviceDate)}) করার সময় হয়ে গেছে। দয়া করে কবে সার্ভিস করা যাবে তা জানালে সুবিধা হবে। ধন্যবাদ!\n- আজহার সার্ভিস (হোম অ্যাপ্লায়েন্স রিপেয়ার)`;
+                const wa = `https://wa.me/91${item.phone}?text=` + encodeURIComponent(waText);
 
                 const card = document.createElement('div');
                 card.className = `bg-white p-4 rounded-xl shadow-sm border ${isDue ? 'border-red-300 bg-red-50/20' : 'border-gray-200'} flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4`;
@@ -316,7 +322,7 @@
                             <span class="${isDue ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-emerald-100 text-emerald-600'} px-2 py-0.5 rounded text-[10px] font-bold uppercase">${isDue ? 'Due' : 'Active'}</span>
                         </div>
                         <p class="text-xs text-gray-500"><i class="fa-solid fa-phone"></i> +91 ${item.phone} &bull; <i class="fa-solid fa-location-dot"></i> ${item.address}</p>
-                        <p class="text-xs text-blue-600 font-medium"><i class="fa-solid fa-fan"></i> ${item.model}</p>
+                        <p class="text-xs text-blue-600 font-medium"><i class="fa-solid fa-fan"></i> ${item.model} <span class="text-gray-400 font-normal">&bull; <i class="fa-regular fa-calendar"></i> Date: ${formatDisplayDate(item.serviceDate)}</span></p>
                         <div class="mt-2">${timerHtml}</div>
                     </div>
                     <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
@@ -342,20 +348,5 @@
         setInterval(renderServices, 1000);
         renderServices();
     </script>
-<script>
-// Script for the starter page. It does nothing if the button isn't there.
-const button = document.getElementById('greet');
-const message = document.getElementById('message');
-let clicks = 0;
-
-if (button && message) {
-  button.addEventListener('click', () => {
-    clicks += 1;
-    message.textContent = `Hello! You clicked ${clicks} time${clicks === 1 ? '' : 's'}.`;
-    console.log('Button clicked', clicks);
-  });
-}
-
-</script>
 </body>
 </html>
